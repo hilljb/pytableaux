@@ -1,0 +1,112 @@
+#!/usr/bin/python
+
+from __future__ import print_function
+
+import sys
+import ast
+
+
+
+def draw_rectangle():
+    """
+    Draws a rectangle. Designed to be used in iteration loops on \\x and \\y in TikZ.
+    """
+    print("        \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);")
+
+
+def draw_row(L,y):
+    """
+    Creates the iterator for a row in TikZ.
+
+    INPUT:
+    L (list) :: A list of x-coordinates for the given row.
+    y (int/long) :: The y-coordinate of the given row.
+    """
+    print("    \\foreach \\x/\\y in {%s} {" % ','.join([str(x)+'/'+str(y) for x in L]))
+    draw_rectangle()
+    print("    }")
+
+
+def draw_int(x,y,i):
+    """
+    Draws integer i at (\\x,\\y).
+
+    INPUT:
+    x :: An int representing the x-coordinate of the integer.
+    y :: An int representing the y-coordinate of the integer.
+    i :: The integer.
+    """
+    print("    \\draw (%s,%s) node{$%s$}" % (x,y,i))
+
+
+def young_diag(L):
+    """
+    Prints TikZ code for a young diagram.
+
+    INPUT:
+    L (list) :: A list of ints representing row length from top to bottom
+
+    EXAMPLE:
+    >>> young_diag([2,1,3])
+    \\begin{array}{c}\\begin{tikzpicture}[scale=0.5]
+        \\foreach \\x/\\y in {0/0,1/0} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+        \\foreach \\x/\\y in {0/-1} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+        \\foreach \\x/\\y in {0/-2,1/-2,2/-2} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+    \\end{tikzpicture}\\end{array}
+    """
+    print("\\begin{array}{c}\\begin{tikzpicture}[scale=0.5]")
+    for y in range(len(L)):
+        draw_row(range(L[y]),-y)
+    print("\\end{tikzpicture}\\end{array}")
+
+
+def young_tableau(L):
+    """
+    Prints TikZ code for a young tableau.
+
+    INPUT:
+    L (list) :: A list of list of ints representing rows of boxes left to right and top to bottom.
+
+    EXAMPLE:
+    >>> young_tableau([[5,4,3],[2,1]])
+    \\begin{array}{c}\\begin{tikzpicture}[scale=0.5]
+        \\foreach \\x/\\y in {0/0,1/0} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+        \\foreach \\x/\\y in {0/-1} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+        \\foreach \\x/\\y in {0/-2,1/-2,2/-2} {
+            \\draw (\\x,\\y) +(-0.5,-0.5) rectangle ++(0.5,0.5);
+        }
+    \\end{tikzpicture}\\end{array}
+    """
+    print("\\begin{array}{c}\\begin{tikzpicture}[scale=0.5]")
+    # Draw the rows
+    for y in range(len(L)):
+        draw_row(range(len(L[y])),-y)
+    # Draw the numbers
+    for y in range(len(L)):
+        for x in range(len(L[y])):
+            draw_int(x,-y,L[-y][x])
+    print("\\end{tikzpicture}\\end{array}")
+
+
+
+if __name__ == "__main__":
+
+    # Parse Input
+    mode = sys.argv[1]
+    shape = ast.literal_eval(sys.argv[2])
+
+    if mode == '-d' or mode == '--diagram':
+        young_diag(shape)
+    elif mode == '-t' or mode == '--tableau':
+        young_tableau(shape)
+
